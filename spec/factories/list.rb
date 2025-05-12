@@ -1,6 +1,6 @@
 FactoryBot.define do
-  factory :book do
+  factory :list do
     title { Faker::Lorem.characters(number:10)}
-    body { Faker::lorem.charavters(number:30)}
+    body { Faker::Lorem.charavters(number:30)}
   end 
 end
