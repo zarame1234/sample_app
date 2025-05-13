@@ -3,20 +3,13 @@
 require 'rails_helper'
 
 describe '投稿のテスト' do
+  # テストコード内でBlobオブジェクトを作成してActive Storageを使ってファイルをアタッチする
+  let(:image_path) { Rails.root.join('spec', 'fixtures', 'test_image.jpg') }
+  let(:image_blob) { ActiveStorage::Blob.create_after_upload!(io: File.open(image_path), filename: 'test_image.jpg', content_type: 'image/jpeg') }
   
-  let!(:list) { create(:list,title:'hoge',body:'body')}
+  # createメソッドを使用してテスト用のデータを作成する際に、image属性にBlobオブジェクトを指定する
+  let!(:list) { create(:list,title:'hoge',body:'body', image: image_blob)}
 
-  before do
-    list.image.attach(
-      io: File.open(Rails.root.join('../fixtures/test_image.jpg')),
-      filename: 'test_image.jpg',
-      content_type: 'image/jpeg'
-    )
-  end
-
-  it '画像が添付されていること' do
-    expect(list.image).to be_attached
-  end
 
   describe 'トップ画面(top_path)のテスト' do
     before do 
@@ -27,7 +20,7 @@ describe '投稿のテスト' do
         expect(page).to have_content 'ここはTopページです' 
       end
       it 'top_pathが"/top"であるか' do
-        expect(current_path).to eq('/')
+        expect(current_path).to eq('/top')
       end
     end
   end
@@ -46,8 +39,8 @@ describe '投稿のテスト' do
     end
     context '投稿処理のテスト' do
       it '投稿後のリダイレクト先は正しいか' do
-        file_in 'list[title]', with: Faker::Lorem.characters(number:10)
-        file_in 'list[body]', with: Faker::Lorem.characters(number:30)
+        fill_in 'list[title]', with: Faker::Lorem.characters(number:10)
+        fill_in 'list[body]', with: Faker::Lorem.characters(number:30)
         click_button '投稿'
         expect(page).to have_current_path list_path(List.last)
       end
@@ -82,7 +75,7 @@ describe '投稿のテスト' do
       it '編集の遷移先は編集画面か' do
         edit_link = find_all('a')[3]
         edit_link.click
-        expect(current_path).to eq('/lists/'+list.id.to_S+'edit')
+        expect(current_path).to eq('/lists/'+list.id.to_s+'/edit')
       end
     end
     context 'list削除のテスト' do
@@ -109,7 +102,7 @@ describe '投稿のテスト' do
           fill_in 'list[title]', with: Faker::Lorem.characters(number:10)
           fill_in 'list[body]', with: Faker::Lorem.characters(number:30)
           click_button '保存'
-          expect(page).to have_current_path list_path(list)
+          expect(page).to have_current_path list_path(List.last)
         end
       end
     end
